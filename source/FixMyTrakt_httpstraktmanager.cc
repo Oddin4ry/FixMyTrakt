@@ -1,0 +1,3 @@
+class FixMyTrakt_httpstraktmanager{
+
+};
