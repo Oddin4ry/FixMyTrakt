@@ -12,7 +12,7 @@ static void destroy(GtkWidget *pWidget, gpointer pData){
 }
 
 void initialise(){
-    std::cout << "Initialised" << std::endl;
+    gManager.initialise();
 }
 
 int main(int argc, char *argv[]){

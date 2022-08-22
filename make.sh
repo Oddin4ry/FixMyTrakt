@@ -8,6 +8,6 @@ CC = gcc
 	echo "Removing old main"
 	rm ./bin/FixMyTrakt
 	echo Compiling Main
-	g++ ./source/FixMyTrakt_main.cc ./source/FixMyTrakt_manager.cc ./source/DBManager.cc ./source/FixMyTrakt_httpstraktmanager.cc -o ./bin/FixMyTrakt `pkg-config gtkmm-3.0 --cflags --libs`
+	g++ ./source/FixMyTrakt_main.cc ./source/FixMyTrakt_manager.cc ./source/ClassLogger.cpp ./source/DBManager.cc ./source/FixMyTrakt_httpstraktmanager.cc -o ./bin/FixMyTrakt `pkg-config gtkmm-3.0 --cflags --libs`
 
 	echo "main completed"

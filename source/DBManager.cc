@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <string>
 #include <stdlib.h>
-#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -16,5 +15,12 @@ class DBManager{
             fs::create_directory(db_path);
             db_path.append("DB/");
             fs::create_directory(db_path);
+        }
+    public:
+        void beginUpdate(std::string pDBName){
+            
+        }
+        void endUpdate(){
+            //static_assert("test");
         }
 };
