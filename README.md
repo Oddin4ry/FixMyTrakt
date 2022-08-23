@@ -10,3 +10,7 @@ Thirdly, when shows are watched and it has ended then it will remove all watch i
 Lastly, to help find new shows there will be a look up of shows not watched (locally or on trakt) and it will help you pick out shows based on the lists.
 
 There may be opportunity for movies in the future, this is well in the future.
+
+DEPENDENCIES
+- gtk for GUI
+- cUrl for web access
