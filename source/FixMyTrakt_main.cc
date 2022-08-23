@@ -20,9 +20,32 @@ void setupAuthenticationPage(){
     gtk_window_set_title(GTK_WINDOW(lAuthenticationWindow), "Enter Trakt Pin");
     gtk_window_set_default_size(GTK_WINDOW(lAuthenticationWindow),300, 300);
     gtk_window_set_modal(GTK_WINDOW(lAuthenticationWindow), true);
-    gtk_window_set_position(GTK_WINDOW(lAuthenticationWindow), GTK_WIN_POS_CENTER_ALWAYS);
+    gtk_window_set_position(GTK_WINDOW(lAuthenticationWindow), GTK_WIN_POS_CENTER);
     gtk_window_set_keep_above(GTK_WINDOW(lAuthenticationWindow), true);
+
+    GtkWidget *lGrid = gtk_grid_new();
+
+    gtk_container_add(GTK_CONTAINER(lAuthenticationWindow), lGrid);
+    gtk_widget_show(lGrid);
+
+    GtkWidget *lLabel = gtk_label_new("Pin");
+    gtk_grid_attach(GTK_GRID(lGrid), lLabel, 0, 0, 1, 1);
+    gtk_widget_show(lLabel);
+
+    GtkWidget *lPinIn = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(lPinIn), 8);
+    gtk_grid_attach(GTK_GRID(lGrid), lPinIn, 1, 0, 1, 1);
+    gtk_widget_show(lPinIn);
+
+    GtkWidget *lButton = gtk_button_new_with_label("Authenticate");
+    gtk_grid_attach(GTK_GRID(lGrid), lButton, 0, 1, 2, 1);
+    gtk_widget_show(lButton);
+    g_signal_connect(G_OBJECT(lButton), "clicked", G_CALLBACK(authentication_clicked), NULL);
     gtk_widget_show(lAuthenticationWindow);
+}
+
+void authentication_clicked(GtkButton *pButton, gpointer user_data){
+    std::cout << "AUTHENTICATION CLICKED";
 }
 
 void initialise(){
