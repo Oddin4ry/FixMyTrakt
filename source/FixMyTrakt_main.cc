@@ -13,6 +13,10 @@ static void destroy(GtkWidget *pWidget, gpointer pData){
         gtk_main_quit();
     }
 }
+void authentication_clicked(GtkButton *pButton, gpointer user_data){
+    std::string lPin = gtk_entry_get_text(GTK_ENTRY(user_data));
+    //std::cout << "AUTHENTICATION CLICKED" << gtk_entry_get_text(GTK_ENTRY(user_data));
+}
 
 void setupAuthenticationPage(){
     GtkWidget *lAuthenticationWindow;
@@ -40,13 +44,10 @@ void setupAuthenticationPage(){
     GtkWidget *lButton = gtk_button_new_with_label("Authenticate");
     gtk_grid_attach(GTK_GRID(lGrid), lButton, 0, 1, 2, 1);
     gtk_widget_show(lButton);
-    g_signal_connect(G_OBJECT(lButton), "clicked", G_CALLBACK(authentication_clicked), NULL);
+    g_signal_connect(G_OBJECT(lButton), "clicked", G_CALLBACK(authentication_clicked), lPinIn);
     gtk_widget_show(lAuthenticationWindow);
 }
 
-void authentication_clicked(GtkButton *pButton, gpointer user_data){
-    std::cout << "AUTHENTICATION CLICKED";
-}
 
 void initialise(){
     if(gManager.initialise()){
