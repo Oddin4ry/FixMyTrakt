@@ -13,12 +13,13 @@ static void destroy(GtkWidget *pWidget, gpointer pData){
         gtk_main_quit();
     }
 }
-void authentication_clicked(GtkButton *pButton, gpointer user_data){
+/*void authentication_clicked(GtkButton *pButton, gpointer user_data){
     std::string lPin = gtk_entry_get_text(GTK_ENTRY(user_data));
+    gManager.getToken(lPin.c_str());
     //std::cout << "AUTHENTICATION CLICKED" << gtk_entry_get_text(GTK_ENTRY(user_data));
-}
+}*/
 
-void setupAuthenticationPage(){
+/*void setupAuthenticationPage(){
     GtkWidget *lAuthenticationWindow;
     lAuthenticationWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(lAuthenticationWindow), "Enter Trakt Pin");
@@ -47,12 +48,16 @@ void setupAuthenticationPage(){
     g_signal_connect(G_OBJECT(lButton), "clicked", G_CALLBACK(authentication_clicked), lPinIn);
     gtk_widget_show(lAuthenticationWindow);
 }
-
+*/
 
 void initialise(){
     if(gManager.initialise()){
         // We are authenticating
-        setupAuthenticationPage();
+        
+    }
+    std::string lDeviceCode = gManager.setupAuthenticationPage();
+    if(lDeviceCode!=""){
+
     }
 }
 

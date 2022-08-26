@@ -34,7 +34,15 @@ class FixMyTrakt_httpstraktmanager{
             curl_easy_setopt(lCurl, CURLOPT_WRITEFUNCTION, &FixMyTrakt_httpstraktmanager::WriteCallBack);
             curl_easy_setopt(lCurl, CURLOPT_HEADER, 0);
             curl_easy_setopt(lCurl, CURLOPT_VERBOSE, 0);
+            if(gIsJSON){
+                struct curl_slist *hs=NULL;
+                hs = curl_slist_append(hs, "Content-Type: application/json");
+                curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
+                gLogger.log("JSON set");
+            }
+
             curl_easy_perform(lCurl);
+
 
             curl_easy_cleanup(lCurl);
             gLogger.log("GET PAGE");
@@ -42,6 +50,39 @@ class FixMyTrakt_httpstraktmanager{
             gLogger.log(lOtherCopy.gInBuffer);
             return lOtherCopy.gInBuffer;
         }
+
+        std::string postPage(const char *pURL, const char *pPostBody, long *pStatusCode){
+            CURL* lCurl;
+            std::stringstream lSS;
+            lCurl= curl_easy_init();
+            FixMyTrakt_httpstraktmanager lOtherCopy;
+            curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
+            curl_easy_setopt(lCurl, CURLOPT_WRITEDATA, &lOtherCopy);
+            curl_easy_setopt(lCurl, CURLOPT_WRITEFUNCTION, &FixMyTrakt_httpstraktmanager::WriteCallBack);
+            curl_easy_setopt(lCurl, CURLOPT_HEADER, 0);
+            curl_easy_setopt(lCurl, CURLOPT_VERBOSE, 0);
+            if(gIsJSON){
+                struct curl_slist *hs=NULL;
+                hs = curl_slist_append(hs, "Content-Type: application/json");
+                hs = curl_slist_append(hs, "Accept: application/json");
+                curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
+                gLogger.log("JSON set");
+            }
+            curl_easy_setopt(lCurl, CURLOPT_POST, 1);
+            curl_easy_setopt(lCurl, CURLOPT_POSTFIELDS, pPostBody);
+            
+            curl_easy_perform(lCurl);
+            
+            curl_easy_getinfo(lCurl, CURLINFO_RESPONSE_CODE, pStatusCode);
+
+            curl_easy_cleanup(lCurl);
+            gLogger.log("POST PAGE");
+            gLogger.log(pURL);
+            gLogger.log(lOtherCopy.gInBuffer);
+            return lOtherCopy.gInBuffer;
+        }
+
+
         std::string getPageWithHeader(const char *pURL){
             CURL* lCurl;
             std::stringstream lSS;
@@ -67,6 +108,9 @@ class FixMyTrakt_httpstraktmanager{
         ~FixMyTrakt_httpstraktmanager(){
             curl_global_cleanup();
         }
+
+        bool gIsJSON = true;
+
     private:
         Logger gLogger = Logger("trakthttps");
         std::string gInBuffer = "";
