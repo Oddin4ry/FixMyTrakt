@@ -13,22 +13,21 @@ static void destroy(GtkWidget *pWidget, gpointer pData){
         gtk_main_quit();
     }
 }
-/*void authentication_clicked(GtkButton *pButton, gpointer user_data){
-    std::string lPin = gtk_entry_get_text(GTK_ENTRY(user_data));
-    gManager.getToken(lPin.c_str());
-    //std::cout << "AUTHENTICATION CLICKED" << gtk_entry_get_text(GTK_ENTRY(user_data));
-}*/
+void authentication_clicked(GtkButton *pButton, gpointer user_data){
+    gManager.getToken();
+}
 
-/*void setupAuthenticationPage(){
+void showAuthenticationCode(std::string pPin){
     GtkWidget *lAuthenticationWindow;
     lAuthenticationWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(lAuthenticationWindow), "Enter Trakt Pin");
+    gtk_window_set_title(GTK_WINDOW(lAuthenticationWindow), "Verify");
     gtk_window_set_default_size(GTK_WINDOW(lAuthenticationWindow),300, 300);
     gtk_window_set_modal(GTK_WINDOW(lAuthenticationWindow), true);
     gtk_window_set_position(GTK_WINDOW(lAuthenticationWindow), GTK_WIN_POS_CENTER);
     gtk_window_set_keep_above(GTK_WINDOW(lAuthenticationWindow), true);
 
     GtkWidget *lGrid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(lGrid), 10);
 
     gtk_container_add(GTK_CONTAINER(lAuthenticationWindow), lGrid);
     gtk_widget_show(lGrid);
@@ -38,17 +37,21 @@ static void destroy(GtkWidget *pWidget, gpointer pData){
     gtk_widget_show(lLabel);
 
     GtkWidget *lPinIn = gtk_entry_new();
-    gtk_entry_set_max_length(GTK_ENTRY(lPinIn), 8);
+    gtk_entry_set_text(GTK_ENTRY(lPinIn), pPin.c_str());
+    gtk_editable_set_editable(GTK_EDITABLE(lPinIn), FALSE);;
+
     gtk_grid_attach(GTK_GRID(lGrid), lPinIn, 1, 0, 1, 1);
     gtk_widget_show(lPinIn);
 
-    GtkWidget *lButton = gtk_button_new_with_label("Authenticate");
+
+    GtkWidget *lButton = gtk_button_new_with_label("Authenticated");
     gtk_grid_attach(GTK_GRID(lGrid), lButton, 0, 1, 2, 1);
     gtk_widget_show(lButton);
-    g_signal_connect(G_OBJECT(lButton), "clicked", G_CALLBACK(authentication_clicked), lPinIn);
+    g_signal_connect(G_OBJECT (lButton), "clicked", G_CALLBACK(authentication_clicked), NULL);
+
     gtk_widget_show(lAuthenticationWindow);
+
 }
-*/
 
 void initialise(){
     if(gManager.initialise()){
@@ -58,6 +61,7 @@ void initialise(){
     std::string lDeviceCode = gManager.setupAuthenticationPage();
     if(lDeviceCode!=""){
 
+        showAuthenticationCode(lDeviceCode);
     }
 }
 

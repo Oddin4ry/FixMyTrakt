@@ -25,21 +25,109 @@ class JsonBuilder {
         Entity *next = 0;
     };
     public:
-        void buildFromString(const char *pJson){
+        void parseString(const char *pJson){
             std::stringstream lCollector;
             std::string lJson = pJson;
             bool lStarted = false;
             bool lStartedQuote = false;
-            
+            bool lField = false;
+            bool lDoneField = false;
+            bool lFieldValue = false;
+            bool lIsNumeric = false;
+            Entity *lEntity = 0;
+            char lLastCharacter = 0;
             for(char lChar: lJson){
                 if(!lStarted&&lChar=='{'){
                     lStarted = true;
                 }else{
-                    if(lChar='"'){
+                    if(lChar=='\"'/*&&!lLastCharacter=='\\'*/){
                         lStartedQuote = !lStartedQuote;
+                        if(lStartedQuote){
+                            if(lDoneField){
+                                lFieldValue = true;
+                                lDoneField = false;
+                                lField = false;
+                            }else{
+                                lField = true;
+                                lFieldValue = false;
+                                lDoneField = false;
+                            }
+                        }else{
+                            if(lField){
+                                lEntity = newEntity(lCollector.str().c_str());
+                                lField = false;
+                                lDoneField = true;
+                            }else if(lFieldValue){
+                                setStringValue(lEntity, lCollector.str().c_str());
+                                lFieldValue = false;
+                            }
+                            lCollector.str(std::string());
+                        }
+                    }else if(lIsNumeric&&lFieldValue&&!isdigit(lChar)){
+                        long long bValue = stoi(lCollector.str());
+                        setIntegerValue(lEntity, bValue);
+                        lIsNumeric = false;
+                        lFieldValue = false;
+                        lDoneField = false;
+                        lCollector.str(std::string());
+                    }else if(isalpha(lChar)||isdigit(lChar)||lChar=='\\'||lField||lFieldValue){
+                        if(isdigit(lChar)&&!lFieldValue&&!lField&&lDoneField){
+                            lIsNumeric = true;
+                            lFieldValue = true;
+                            lDoneField = false;
+                        }
+                        if(lFieldValue||lField){
+                            lCollector << lChar;
+                        }
+                    }else{
+
+                        if(lFieldValue){
+                            if(lIsNumeric){
+                                long long bValue = stoi(lCollector.str());
+                                setIntegerValue(lEntity, bValue);
+                                lIsNumeric = false;
+                            }else{
+                                setStringValue(lEntity, lCollector.str().c_str());
+                            }
+                            lCollector.str(std::string());
+                            lDoneField = false;
+                            lFieldValue = false;
+                        }
                     }
                 }
+                lLastCharacter = lChar;
             }
+        }
+
+
+        Entity *getEntityByName(Entity *pParent, const char *pName){
+            if(pParent->name==pName){
+                return pParent;
+            }
+            gLogger.log(pParent->name.c_str(), pName);
+            Entity *lChild = pParent->allChildren;
+            while(lChild!=0){
+                Entity *lReturn = getEntityByName(lChild, pName);
+                if(lReturn!=0){
+                  return lReturn;
+                }
+                lChild = lChild->next;
+            }
+            return 0;
+        }
+
+        Entity *getEntityByName(const char *pName){
+            Entity *lEntity = gAllEntities;
+            while(lEntity!=0){
+                gLogger.log("Iterating", lEntity->name.c_str());
+                Entity *lReturn = getEntityByName(lEntity, pName);
+                if(lReturn!=0){
+                    return lReturn;
+                }
+                
+                lEntity = lEntity->next;
+            }
+            return 0;
         }
 
         std::string getFormatted(){
@@ -65,13 +153,31 @@ class JsonBuilder {
         }
 
         void setIntegerValue(Entity *pEntity, long long pValue){
-            pEntity->type = VALUE_TYPE_STRING;
+            pEntity->type = VALUE_TYPE_NUMBER;
             pEntity->ivalue = pValue;
         }
 
         Entity *newEntity(const char *pName){
             return newEntity(0, pName);
         }
+
+
+        std::string getStringValue(const char *pName){
+            Entity *lEntity = getEntityByName(pName);
+            if(lEntity==0){
+                return "";
+            }
+            return lEntity->svalue;
+        }
+
+        long long getIntegerValue(const char *pName){
+            Entity *lEntity = getEntityByName(pName);
+            if(lEntity==0){
+                return 0;
+            }
+            return lEntity->ivalue;
+        }
+
 
         Entity *newEntity(Entity *pParent, const char *pName){
             Entity *lNew = new Entity;
@@ -86,7 +192,6 @@ class JsonBuilder {
                 pParent->last = lNew;
             }else{
                 if(gAllEntities==0){
-                    gLogger.log("NEW");
                     gAllEntities = lNew;
                 }else{
                     lNew->previous = gLast;
@@ -146,6 +251,7 @@ class JsonBuilder {
             return lSS.str();
         }
 
+
         // https://docs.microsoft.com/en-us/sql/relational-databases/json/how-for-json-escapes-special-characters-and-control-characters-sql-server?view=sql-server-ver16
         std::string convertString(std::string pInput){
             std::stringstream lSS;
@@ -154,8 +260,8 @@ class JsonBuilder {
                     lSS << "\\\"";
                 }else if(lChar=='\\'){
                     lSS << "\\\\";
-                }else if(lChar=='/'){
-                    lSS << "\\/";
+                // }else if(lChar=='/'){
+                //     lSS << "\\/";
                 }else if(lChar==9){
                     lSS << "\\t";
                 }else if(lChar==13){
