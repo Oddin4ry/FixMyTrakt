@@ -104,7 +104,6 @@ class JsonBuilder {
             if(pParent->name==pName){
                 return pParent;
             }
-            gLogger.log(pParent->name.c_str(), pName);
             Entity *lChild = pParent->allChildren;
             while(lChild!=0){
                 Entity *lReturn = getEntityByName(lChild, pName);
@@ -119,7 +118,6 @@ class JsonBuilder {
         Entity *getEntityByName(const char *pName){
             Entity *lEntity = gAllEntities;
             while(lEntity!=0){
-                gLogger.log("Iterating", lEntity->name.c_str());
                 Entity *lReturn = getEntityByName(lEntity, pName);
                 if(lReturn!=0){
                     return lReturn;

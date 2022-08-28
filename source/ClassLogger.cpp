@@ -73,6 +73,12 @@ class Logger {
             log(lSS.str());
         }
 
+        void log(const char *pWhatToLog, std::string pValue){
+            std::stringstream lSS;
+            lSS << pWhatToLog << ": " << pValue;
+            log(lSS.str());
+        }
+
         void log(const char *pWhatToLog){
             std::ofstream ofs(db_file.c_str(), std::ios_base::out | std::ios_base::app);
             time_t now = time(0);

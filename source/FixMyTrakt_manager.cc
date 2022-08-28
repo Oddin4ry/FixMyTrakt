@@ -1,7 +1,10 @@
 #include "DBManager.cc"
 #include "FixMyTrakt_httpstraktmanager.cc"
 #include <string>
+#ifndef JSON_BUILDER
 #include "jsonbuilder.cpp"
+#define JSON_BUILDER
+#endif
 
 #ifndef CLASS_LOGGER
 #include "ClassLogger.cpp"
@@ -9,9 +12,12 @@
 
 #endif
 class FixMyTrakt_manager{
+    DBManager gDB;
     const char *CLIENT_ID = "3cd645fbc46049abcb1820ec3e02314ac9e26ec3b7b8f0fa05c4a97a8a236c07";
     const char *CLIENT_SECRET = "784600aa1a6cb70c3dc84204689640efb569ff6a02adaf4f7929b6938fe6be21";
     std::string gDevice_code = "";
+    std::string gAccessToken = "";
+
     public:
         bool initialise(){
             return true;
@@ -25,13 +31,27 @@ class FixMyTrakt_manager{
             FixMyTrakt_httpstraktmanager lPageManger;
             long lStatusCode = 0;
             std::string lPage = lPageManger.postPage("https://api.trakt.tv/oauth/device/token", lBuilder.getFormatted().c_str(), &lStatusCode);
-            gLogger.log("STATUS CODE", lStatusCode);
+            if(lStatusCode==200){
+                JsonBuilder bBuilder;
+                bBuilder.parseString(lPage.c_str());
+                gDB.beginUpdate(gDB.DB_TOKENS);
+                gDB.setStringValue("access_token", bBuilder.getStringValue("access_token").c_str());
+                gDB.setStringValue("expires_in", bBuilder.getStringValue("expires_in").c_str());
+                gDB.setStringValue("token_type", bBuilder.getStringValue("token_type").c_str());
+                gDB.setStringValue("refresh_token", bBuilder.getStringValue("refresh_token").c_str());
+                gDB.setStringValue("created_at", bBuilder.getStringValue("created_at").c_str());
+
+                gDB.endUpdate();
+            }
         }
 
         std::string setupAuthenticationPage(){
-             /*std::string lURL = "xdg-open ";
-             lURL.append("\"https://api.trakt.tv/oauth/authorize?response_type=code&client_id=3cd645fbc46049abcb1820ec3e02314ac9e26ec3b7b8f0fa05c4a97a8a236c07&redirect_uri=urn:ietf:wg:oauth:2.0:oob\"");
-             system(lURL.c_str());*/
+            gDB.doRead(gDB.DB_TOKENS);
+            gAccessToken = gDB.getStringValue("access_token");
+            if(gAccessToken!=""){
+                return "";
+            }
+
             JsonBuilder lBuilder;
             lBuilder.setStringValue(lBuilder.newEntity("client_id"), CLIENT_ID);
             FixMyTrakt_httpstraktmanager lPageManger;
