@@ -45,6 +45,10 @@ class FixMyTrakt_manager{
             }
         }
 
+        void getAllRatings(){
+            
+        }
+
         std::string setupAuthenticationPage(){
             gDB.doRead(gDB.DB_TOKENS);
             gAccessToken = gDB.getStringValue("access_token");

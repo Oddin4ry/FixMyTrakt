@@ -35,7 +35,6 @@ class DBManager{
             if(lFile.is_open()){
                 std::stringstream lSS;
                 while(!lFile.eof()){
-                    gLogger.log("ContentsP", lSS.str());
                     std::string bSS;
 
                     lFile >> bSS;
@@ -85,7 +84,6 @@ class DBManager{
             if(lFile.is_open()){
                 std::stringstream lSS;
                 while(!lFile.eof()){
-                    gLogger.log("ContentsP", lSS.str());
                     std::string bSS;
 
                     lFile >> bSS;

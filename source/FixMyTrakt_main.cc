@@ -7,6 +7,14 @@
 
 FixMyTrakt_manager gManager;
 GtkWidget *gMainWindow;
+GtkWidget *gMenuButtons;
+GtkWidget *gWindowPane;
+GtkWidget *gHouseKeepButton;
+GtkWidget *gBackButton;
+GtkWidget *gHouseKeepRatings;
+
+void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data);
+void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data);
 
 static void destroy(GtkWidget *pWidget, gpointer pData){
     if (pWidget==gMainWindow){
@@ -65,6 +73,44 @@ void initialise(){
     }
 }
 
+void clearMainMenu(){
+    gtk_widget_destroy(gHouseKeepButton);
+}
+
+void showHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
+    clearMainMenu();
+    gBackButton = gtk_button_new_with_label("Home");
+    g_signal_connect(G_OBJECT (gBackButton), "clicked", G_CALLBACK(showReturnHouseKeepMenu), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gBackButton, 0, 0, 0);
+    gHouseKeepRatings = gtk_button_new_with_label("House Keep Ratings");
+    g_signal_connect(G_OBJECT (gBackButton), "clicked", G_CALLBACK(showHousekeepRatings), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepRatings, 0, 0, 0);
+    gtk_widget_show_all(gMainWindow);    
+}
+
+void clearHouseKeepMenu(){
+    gtk_widget_destroy(gBackButton);
+    gtk_widget_destroy(gHouseKeepRatings);
+}
+void showMainMenu(){
+    gHouseKeepButton = gtk_button_new_with_label("House Keeping");
+    g_signal_connect(G_OBJECT (gHouseKeepButton), "clicked", G_CALLBACK(showHouseKeepMenu), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepButton, 0, 0, 0);
+    gtk_widget_show_all(gMainWindow);
+}
+void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
+    clearHouseKeepMenu();
+    showMainMenu();
+}
+
+void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
+   gManager.getAllRatings();
+}
+
+
+
+
+
 void setupMainWindow(){
     GdkRectangle lWorkArea = {0};
     gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &lWorkArea);
@@ -74,8 +120,26 @@ void setupMainWindow(){
 
     gtk_window_set_title(GTK_WINDOW(gMainWindow), "Fix My Trakt");
     g_signal_connect(G_OBJECT (gMainWindow), "destroy", G_CALLBACK(destroy), NULL);
-    gtk_window_set_position(GTK_WINDOW(gMainWindow), GTK_WIN_POS_CENTER_ALWAYS);
+    //gtk_window_set_position(GTK_WINDOW(gMainWindow), GTK_WIN_POS_CENTER_ALWAYS);
     gtk_window_resize(GTK_WINDOW(gMainWindow), lWorkArea.width, lWorkArea.height);
+
+   // GtkWidget *lGrid = gtk_grid_new();
+//    gtk_grid_set_column_spacing(GTK_GRID(lGrid), 10);
+
+    //gtk_container_add(GTK_CONTAINER(lAuthenticationWindow), lGrid);
+    //gtk_widget_show(lGrid);
+    GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gMenuButtons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_box_pack_start(GTK_BOX(vBox), gMenuButtons,false,true,10);
+    gWindowPane = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_box_pack_start(GTK_BOX(vBox), gWindowPane,false,true,10);
+    gtk_container_add(GTK_CONTAINER(gMainWindow), vBox);
+
+    gtk_widget_show_all(gMainWindow);
+   // gtk_container_add(GTK_CONTAINER(gMenuButtons), gMainWindow);
+    //gtk_widget_show(gMenuButtons);
+/*    gWindowPane = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_container_add((GTK_CONTAINER(gMainWindow), gWindowPane));*/
 
 }
 
@@ -83,6 +147,7 @@ int main(int argc, char *argv[]){
     gtk_init(&argc, &argv);
     initialise();
     setupMainWindow();
+    showMainMenu();
     gtk_widget_show(gMainWindow);
     gtk_main();
     return 0;
