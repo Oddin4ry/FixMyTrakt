@@ -1,20 +1,43 @@
-#include <gtkmm.h>
-#include <gtkmm/button.h>
-#include <gtkmm/window.h>
-#include <gtkmm/application.h>
-#include "FixMyTrakt_manager.cc"
-#include <iostream>
+#include "main.h"
 
-FixMyTrakt_manager gManager;
-GtkWidget *gMainWindow;
-GtkWidget *gMenuButtons;
-GtkWidget *gWindowPane;
-GtkWidget *gHouseKeepButton;
-GtkWidget *gBackButton;
-GtkWidget *gHouseKeepRatings;
+void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
+    gManager.getAllRatings();
+}
 
-void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data);
-void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data);
+void clearMainMenu(){
+    gtk_widget_destroy(gHouseKeepButton);
+}
+void clearHouseKeepMenu(){
+    gtk_widget_destroy(gBackButton);
+    gtk_widget_destroy(gHouseKeepRatings);
+}
+
+void showMainMenu(){
+    gHouseKeepButton = gtk_button_new_with_label("House Keeping");
+    g_signal_connect(G_OBJECT (gHouseKeepButton), "clicked", G_CALLBACK(showHouseKeepMenu), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepButton, 0, 0, 0);
+    gtk_widget_show_all(gMainWindow);
+}
+
+
+void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
+    clearHouseKeepMenu();
+    showMainMenu();
+}
+
+
+void showHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
+    clearMainMenu();
+    gBackButton = gtk_button_new_with_label("Home");
+    g_signal_connect(G_OBJECT (gBackButton), "clicked", G_CALLBACK(showReturnHouseKeepMenu), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gBackButton, 0, 0, 0);
+    gHouseKeepRatings = gtk_button_new_with_label("House Keep Ratings");
+    g_signal_connect(G_OBJECT (gHouseKeepRatings), "clicked", G_CALLBACK(showHousekeepRatings), NULL);
+    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepRatings, 0, 0, 0);
+    gtk_widget_show_all(gMainWindow);    
+}
+
+
 
 static void destroy(GtkWidget *pWidget, gpointer pData){
     if (pWidget==gMainWindow){
@@ -71,40 +94,6 @@ void initialise(){
 
         showAuthenticationCode(lDeviceCode);
     }
-}
-
-void clearMainMenu(){
-    gtk_widget_destroy(gHouseKeepButton);
-}
-
-void showHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
-    clearMainMenu();
-    gBackButton = gtk_button_new_with_label("Home");
-    g_signal_connect(G_OBJECT (gBackButton), "clicked", G_CALLBACK(showReturnHouseKeepMenu), NULL);
-    gtk_box_pack_start(GTK_BOX(gMenuButtons), gBackButton, 0, 0, 0);
-    gHouseKeepRatings = gtk_button_new_with_label("House Keep Ratings");
-    g_signal_connect(G_OBJECT (gBackButton), "clicked", G_CALLBACK(showHousekeepRatings), NULL);
-    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepRatings, 0, 0, 0);
-    gtk_widget_show_all(gMainWindow);    
-}
-
-void clearHouseKeepMenu(){
-    gtk_widget_destroy(gBackButton);
-    gtk_widget_destroy(gHouseKeepRatings);
-}
-void showMainMenu(){
-    gHouseKeepButton = gtk_button_new_with_label("House Keeping");
-    g_signal_connect(G_OBJECT (gHouseKeepButton), "clicked", G_CALLBACK(showHouseKeepMenu), NULL);
-    gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepButton, 0, 0, 0);
-    gtk_widget_show_all(gMainWindow);
-}
-void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
-    clearHouseKeepMenu();
-    showMainMenu();
-}
-
-void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
-   gManager.getAllRatings();
 }
 
 

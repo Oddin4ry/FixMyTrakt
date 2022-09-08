@@ -9,6 +9,12 @@
 #include <sstream>
 class FixMyTrakt_httpstraktmanager{
     public:
+        void setDefaultHeaderDetails(const char *pClientId, const char *pApiVersion, const char *pAccessToken){
+            gClientId = pClientId;
+            gApiVersion = pApiVersion;
+            gAccessTokken = pAccessToken;
+        }
+
         static size_t WriteCallBack(char *pContents, size_t pSize, size_t pNMemb, void *pUserP){
             return static_cast<FixMyTrakt_httpstraktmanager*>(pUserP)->HandleDataIn(pContents, pSize, pNMemb);
         }
@@ -24,7 +30,7 @@ class FixMyTrakt_httpstraktmanager{
             return getTag("location: ", "\r", lPage.c_str());
         }
 
-        std::string getPage(const char *pURL){
+        std::string getPage(const char *pURL, long *pStatusCode){
             CURL* lCurl;
             std::stringstream lSS;
             lCurl= curl_easy_init();
@@ -34,19 +40,35 @@ class FixMyTrakt_httpstraktmanager{
             curl_easy_setopt(lCurl, CURLOPT_WRITEFUNCTION, &FixMyTrakt_httpstraktmanager::WriteCallBack);
             curl_easy_setopt(lCurl, CURLOPT_HEADER, 0);
             curl_easy_setopt(lCurl, CURLOPT_VERBOSE, 0);
+    
+            struct curl_slist *hs=NULL;
             if(gIsJSON){
-                struct curl_slist *hs=NULL;
                 hs = curl_slist_append(hs, "Content-Type: application/json");
-                curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
-                gLogger.log("JSON set");
             }
+
+            if(gAccessTokken!=""){
+                std::stringstream bSS;
+                bSS << "authorization: bearer " << gAccessTokken;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gClientId!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-key: " << gClientId;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gApiVersion!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-version " << gApiVersion;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            } 
+            curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
 
             curl_easy_perform(lCurl);
 
+            curl_easy_getinfo(lCurl, CURLINFO_RESPONSE_CODE, pStatusCode);
 
             curl_easy_cleanup(lCurl);
-            gLogger.log("GET PAGE");
-            gLogger.log(pURL);
+            gLogger.log("GET PAGE", pURL);
             gLogger.log(lOtherCopy.gInBuffer);
             return lOtherCopy.gInBuffer;
         }
@@ -66,7 +88,6 @@ class FixMyTrakt_httpstraktmanager{
                 hs = curl_slist_append(hs, "Content-Type: application/json");
                 hs = curl_slist_append(hs, "Accept: application/json");
                 curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
-                gLogger.log("JSON set");
             }
             curl_easy_setopt(lCurl, CURLOPT_POST, 1);
             curl_easy_setopt(lCurl, CURLOPT_POSTFIELDS, pPostBody);
@@ -109,6 +130,8 @@ class FixMyTrakt_httpstraktmanager{
             curl_global_cleanup();
         }
 
+        
+
         bool gIsJSON = true;
 
     private:
@@ -133,4 +156,8 @@ class FixMyTrakt_httpstraktmanager{
             lContents = pContents;
             return lContents.substr(lStart, lEnd - lStart);
         }
+
+        std::string gClientId = "";
+        std::string gApiVersion = "";
+        std::string gAccessTokken = "";
 };

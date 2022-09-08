@@ -1,5 +1,10 @@
 #include "DBManager.cc"
+#ifndef HTTPS_TRAKT
 #include "FixMyTrakt_httpstraktmanager.cc"
+#define HTTPS_TRAKT
+#endif
+
+#include "ITraktTask.cpp"
 #include <string>
 #ifndef JSON_BUILDER
 #include "jsonbuilder.cpp"
@@ -9,12 +14,13 @@
 #ifndef CLASS_LOGGER
 #include "ClassLogger.cpp"
 #define CLASS_LOGGER
-
 #endif
+
 class FixMyTrakt_manager{
     DBManager gDB;
     const char *CLIENT_ID = "3cd645fbc46049abcb1820ec3e02314ac9e26ec3b7b8f0fa05c4a97a8a236c07";
     const char *CLIENT_SECRET = "784600aa1a6cb70c3dc84204689640efb569ff6a02adaf4f7929b6938fe6be21";
+    const char *API_VERSION = "2";
     std::string gDevice_code = "";
     std::string gAccessToken = "";
 
@@ -22,6 +28,11 @@ class FixMyTrakt_manager{
         bool initialise(){
             return true;
         }
+        ~FixMyTrakt_manager(){
+            if(gCurrentTask!=0){
+                delete gCurrentTask;
+            }
+        };
 
         void getToken(){
             JsonBuilder lBuilder;
@@ -45,7 +56,25 @@ class FixMyTrakt_manager{
             }
         }
 
+        void setupPageManager(FixMyTrakt_httpstraktmanager *pPageManager){
+            pPageManager->setDefaultHeaderDetails(CLIENT_ID, API_VERSION, gAccessToken.c_str());
+            pPageManager->gIsJSON = true;
+        }
+
         void getAllRatings(){
+            /*FixMyTrakt_httpstraktmanager lPageManager;
+            long lStatusCode = 0;
+            setupPageManager(&lPageManager);
+            std::string lPage = lPageManager.getPage("https://api.trakt.tv/sync/ratings", &lStatusCode);
+            //std::string lPage = lPageManager.getPage("https://www.google.com", &lStatusCode);
+            //std::string lPage = lPageManager.postPage("https://apitrakt.tv/sync/ratings", "", &lStatusCode);
+            gLogger.log("PAGE", lPage);
+            gLogger.log("STATUS CODE", lStatusCode);*/
+            if(gCurrentTask!=0){
+                return;
+            }
+            gCurrentTask = new CleanRatingsTask(CLIENT_ID, API_VERSION, gAccessToken.c_str());
+            gCurrentTask->run();
             
         }
 
@@ -80,5 +109,6 @@ class FixMyTrakt_manager{
     private:
         Logger gLogger = Logger("FixMTraktManager");
         DBManager gDBManager;
+        ITraktTask *gCurrentTask = 0;
 
 };
