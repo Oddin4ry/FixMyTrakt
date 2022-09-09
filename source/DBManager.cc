@@ -61,7 +61,7 @@ class DBManager{
         }
 
         void setStringValue(const char *pFieldName, const char *pValue){
-            gBuilder->setStringValue(gBuilder->newEntity(pFieldName), pValue);
+            gBuilder->newValue(pFieldName, pValue);
         }
 
         ~DBManager(){

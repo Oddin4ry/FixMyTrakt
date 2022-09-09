@@ -14,3 +14,4 @@ There may be opportunity for movies in the future, this is well in the future.
 DEPENDENCIES
 - gtk for GUI
 - cUrl for web access
+sudo apt-get install libjsoncpp-dev

@@ -36,9 +36,9 @@ class FixMyTrakt_manager{
 
         void getToken(){
             JsonBuilder lBuilder;
-            lBuilder.setStringValue(lBuilder.newEntity("code"), gDevice_code.c_str());
-            lBuilder.setStringValue(lBuilder.newEntity("client_id"), CLIENT_ID);
-            lBuilder.setStringValue(lBuilder.newEntity("client_secret"), CLIENT_SECRET);
+            lBuilder.newValue("code", gDevice_code.c_str());
+            lBuilder.newValue("client_id", CLIENT_ID);
+            lBuilder.newValue("client_secret", CLIENT_SECRET);
             FixMyTrakt_httpstraktmanager lPageManger;
             long lStatusCode = 0;
             std::string lPage = lPageManger.postPage("https://api.trakt.tv/oauth/device/token", lBuilder.getFormatted().c_str(), &lStatusCode);
@@ -62,20 +62,12 @@ class FixMyTrakt_manager{
         }
 
         void getAllRatings(){
-            /*FixMyTrakt_httpstraktmanager lPageManager;
-            long lStatusCode = 0;
-            setupPageManager(&lPageManager);
-            std::string lPage = lPageManager.getPage("https://api.trakt.tv/sync/ratings", &lStatusCode);
-            //std::string lPage = lPageManager.getPage("https://www.google.com", &lStatusCode);
-            //std::string lPage = lPageManager.postPage("https://apitrakt.tv/sync/ratings", "", &lStatusCode);
-            gLogger.log("PAGE", lPage);
-            gLogger.log("STATUS CODE", lStatusCode);*/
             if(gCurrentTask!=0){
                 return;
             }
             gCurrentTask = new CleanRatingsTask(CLIENT_ID, API_VERSION, gAccessToken.c_str());
             gCurrentTask->run();
-            
+
         }
 
         std::string setupAuthenticationPage(){
@@ -86,7 +78,7 @@ class FixMyTrakt_manager{
             }
 
             JsonBuilder lBuilder;
-            lBuilder.setStringValue(lBuilder.newEntity("client_id"), CLIENT_ID);
+            lBuilder.newValue("client_id", CLIENT_ID);
             FixMyTrakt_httpstraktmanager lPageManger;
             long lStatusCode = 0;
             std::string lPage = lPageManger.postPage("https://api.trakt.tv/oauth/device/code", lBuilder.getFormatted().c_str(), &lStatusCode);

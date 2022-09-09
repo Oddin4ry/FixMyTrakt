@@ -3,6 +3,16 @@
 #define HTTPS_TRAKT
 #endif
 
+#ifndef JSON_BUILDER
+#include "jsonbuilder.cpp"
+#define JSON_BUILDER
+#endif
+
+#ifndef CLASS_LOGGER
+#include "ClassLogger.cpp"
+#define CLASS_LOGGER
+#endif
+
 class ITraktTask{
     public:
         virtual bool run() = 0;
@@ -10,6 +20,77 @@ class ITraktTask{
         virtual bool isStopped() = 0;
         virtual long long getTasksDone() = 0;
         virtual long long getTotalTasks() = 0;
+
+        struct StatisticItem{
+            std::string name = "";
+            long long unsigned amount = 0;
+            StatisticItem *allChildStatistics = 0;
+            StatisticItem *parentStatistic = 0;
+            StatisticItem *next = 0;
+            StatisticItem *lastChild = 0;
+            StatisticItem *previous = 0;
+        };
+
+        Logger gLog = Logger("Task");
+        StatisticItem *addStatistic(std::string pName){
+            StatisticItem *lStat = gAllStatistics;
+            while(lStat!=0){
+                if(pName==lStat->name){
+                    lStat->amount++;
+                    return lStat;
+                }
+                lStat = lStat->next;
+            }
+            lStat = new StatisticItem;
+            lStat->name = pName;
+            lStat->amount = 1;
+            if(gAllStatistics==0){
+                gAllStatistics = lStat;
+            }
+            if(gLast!=0){
+                gLast->next = lStat;
+                lStat->previous = gLast;
+            }
+            gLast = lStat;
+            return lStat;
+        };
+
+        StatisticItem *addStatistic(StatisticItem *pParent, std::string pName){
+            if(pParent==0){
+                return addStatistic(pName);
+            }
+            StatisticItem *lStat = pParent->allChildStatistics;
+            while(lStat!=0){
+                if(lStat->name==pName){
+                    lStat->amount++;
+                    pParent->amount++;
+                    return lStat;
+                }
+                lStat = lStat->next;
+            }
+
+            lStat = new StatisticItem;
+            lStat->name = pName;
+            lStat->parentStatistic = pParent;
+            if(pParent->allChildStatistics==0){
+                pParent->allChildStatistics = lStat;
+            }
+            if(pParent->lastChild!=0){
+                pParent->lastChild->next = lStat;
+                lStat->previous = pParent->lastChild;
+            }
+             pParent->lastChild = lStat;
+            return lStat;
+        };        
+
+    private:
+       
+
+
+
+        StatisticItem *gAllStatistics = 0;
+        StatisticItem *gLast = 0;
+
 };
 class CleanRatingsTask : public ITraktTask {
     public:
@@ -43,6 +124,10 @@ class CleanRatingsTask : public ITraktTask {
 
             long lStatusCode = 0;
             std::string lPage = gPageManager.getPage(lSS.str().c_str(), &lStatusCode);
+            gJson = new JsonBuilder;
+            gJson->parseString(lPage.c_str());
+            gLog.log(gJson->getFormatted());
+
         }
 
         void deleteResults(){
@@ -78,6 +163,12 @@ class CleanRatingsTask : public ITraktTask {
            // std::thread lThread( [this] { this->run(); }); // <-- crashes as well
          //   std::thread lThread(&CleanRatingsTask::run, this); <-- compiles but crashes
         };
+
+        ~CleanRatingsTask(){
+            if(gJson!=0){
+                delete gJson;
+            }
+        };
     private:
         FixMyTrakt_httpstraktmanager gPageManager;
         short gCurrentRating = 0;
@@ -94,6 +185,7 @@ class CleanRatingsTask : public ITraktTask {
                 gCurrentRating = 1;
             }
         };
+        JsonBuilder *gJson = 0;
 };
 /*            /*FixMyTrakt_httpstraktmanager lPageManager;
             long lStatusCode = 0;
