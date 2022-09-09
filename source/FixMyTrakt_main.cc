@@ -1,7 +1,35 @@
 #include "main.h"
 
+gboolean pollProgress(gpointer user_data){
+    bool lIsRunning = false;
+    long long lTotalTasks = 0;
+    long long lCurrentTasks = 0;
+    std::string lTaskName = gManager.getTaskName();
+    bool lContinue = !gManager.pollTask(lIsRunning, lCurrentTasks, lTotalTasks);
+    double lPercent = lCurrentTasks / lTotalTasks;
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(gProgress), lPercent);
+    std::stringstream lSS;
+    lSS << lTaskName << " " << lPercent;
+    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(gProgress), lSS.str().c_str());
+    if(lContinue){
+        return G_SOURCE_CONTINUE;
+    }
+    gtk_widget_destroy(gProgress);
+    return G_SOURCE_REMOVE;
+}
+
+void setupProgress(){
+    gProgress = gtk_progress_bar_new();
+    gtk_container_add(GTK_CONTAINER(gWindowPane), gProgress);
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(gProgress), true);
+    gtk_widget_show_all(gMainWindow); 
+    g_timeout_add(600, pollProgress, 0);
+    
+}
 void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
     gManager.getAllRatings();
+    setupProgress();
+    
 }
 
 void clearMainMenu(){
@@ -99,7 +127,6 @@ void initialise(){
 
 
 
-
 void setupMainWindow(){
     GdkRectangle lWorkArea = {0};
     gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &lWorkArea);
@@ -112,11 +139,6 @@ void setupMainWindow(){
     //gtk_window_set_position(GTK_WINDOW(gMainWindow), GTK_WIN_POS_CENTER_ALWAYS);
     gtk_window_resize(GTK_WINDOW(gMainWindow), lWorkArea.width, lWorkArea.height);
 
-   // GtkWidget *lGrid = gtk_grid_new();
-//    gtk_grid_set_column_spacing(GTK_GRID(lGrid), 10);
-
-    //gtk_container_add(GTK_CONTAINER(lAuthenticationWindow), lGrid);
-    //gtk_widget_show(lGrid);
     GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gMenuButtons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_box_pack_start(GTK_BOX(vBox), gMenuButtons,false,true,10);
@@ -125,10 +147,6 @@ void setupMainWindow(){
     gtk_container_add(GTK_CONTAINER(gMainWindow), vBox);
 
     gtk_widget_show_all(gMainWindow);
-   // gtk_container_add(GTK_CONTAINER(gMenuButtons), gMainWindow);
-    //gtk_widget_show(gMenuButtons);
-/*    gWindowPane = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-    gtk_container_add((GTK_CONTAINER(gMainWindow), gWindowPane));*/
 
 }
 

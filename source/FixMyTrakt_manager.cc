@@ -70,6 +70,34 @@ class FixMyTrakt_manager{
 
         }
 
+        std::string getTaskName(){
+            if(gCurrentTask==0){
+                return "N/A";
+            }
+            return gCurrentTask->getTaskName();
+        }
+
+        bool pollTask(bool &pRunning, long long &pProgressDone, long long &pTotalItems){
+            if(gCurrentTask==0){
+                pRunning = 0;
+                pProgressDone = 1;
+                pTotalItems = 1;
+                return true;
+            }
+            pProgressDone = gCurrentTask->getTasksDone();
+            pTotalItems = gCurrentTask->getTotalTasks();
+            if(gCurrentTask->isRunning()){
+                gCurrentTask->run();
+                pProgressDone = gCurrentTask->getTasksDone();
+                pTotalItems = gCurrentTask->getTotalTasks();
+                pRunning = gCurrentTask->isRunning();                
+                return !pRunning;
+            }
+
+            pRunning = false;
+            return true;
+        }
+
         std::string setupAuthenticationPage(){
             gDB.doRead(gDB.DB_TOKENS);
             gAccessToken = gDB.getStringValue("access_token");

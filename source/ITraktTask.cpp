@@ -20,6 +20,7 @@ class ITraktTask{
         virtual bool isStopped() = 0;
         virtual long long getTasksDone() = 0;
         virtual long long getTotalTasks() = 0;
+        virtual std::string getTaskName() = 0;
 
         struct StatisticItem{
             std::string name = "";
@@ -102,6 +103,10 @@ class CleanRatingsTask : public ITraktTask {
             return true;
         };
 
+        std::string getTaskName(){
+            return "Clean Ratings";
+        }
+
         std::string getStageName(){
             if(gCurrentStage==STAGE_ALL){
                 return "all";
@@ -143,7 +148,7 @@ class CleanRatingsTask : public ITraktTask {
         }
 
         bool isRunning(){
-            return true;
+            return !isStopped();
         };
 
         bool isStopped(){
@@ -151,11 +156,11 @@ class CleanRatingsTask : public ITraktTask {
         };
 
         long long getTasksDone(){
-            return (gCurrentStage + 1) * (gCurrentRating + 1);
+            return ((gCurrentStage + 1) * 10) + (gCurrentRating + 1);
         };
 
         long long getTotalTasks(){
-            return STAGE_ALL * STAGE_ALL;
+            return (STAGE_ALL * 10) + 10;
         };
 
         CleanRatingsTask(const char *pClientID, const char *pApiVersion, const char *pAccessToken){
