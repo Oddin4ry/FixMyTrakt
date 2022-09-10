@@ -1,20 +1,29 @@
 #include "main.h"
 
+void stopProcess(GtkButton *pButton, gpointer pUser_data){
+    gManager.stopProcess();
+    gtk_widget_set_sensitive(gStopProcess, false);
+}
+
 gboolean pollProgress(gpointer user_data){
     bool lIsRunning = false;
     long long lTotalTasks = 0;
     long long lCurrentTasks = 0;
     std::string lTaskName = gManager.getTaskName();
-    bool lContinue = !gManager.pollTask(lIsRunning, lCurrentTasks, lTotalTasks);
+    bool lContinue = gManager.pollTask(lIsRunning, lCurrentTasks, lTotalTasks);
+    
     double lPercent = (double)lCurrentTasks / (double)lTotalTasks;
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(gProgress), lPercent);
     std::stringstream lSS;
     lSS << lTaskName << " " << lPercent;
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(gProgress), lSS.str().c_str());
+    
     if(lContinue){
         return G_SOURCE_CONTINUE;
     }
     gtk_widget_destroy(gProgress);
+    gtk_widget_destroy(gStopProcess);
+    gtk_widget_set_sensitive(gMenuButtons, true);
     return G_SOURCE_REMOVE;
 }
 
@@ -22,11 +31,15 @@ void setupProgress(){
     gProgress = gtk_progress_bar_new();
     gtk_container_add(GTK_CONTAINER(gWindowPane), gProgress);
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(gProgress), true);
+    gStopProcess = gtk_button_new_with_label("Stop");
+    gtk_container_add(GTK_CONTAINER(gWindowPane), gStopProcess);
+    g_signal_connect(G_OBJECT (gStopProcess), "clicked", G_CALLBACK(stopProcess), NULL);      
     gtk_widget_show_all(gMainWindow); 
     g_timeout_add(100, pollProgress, 0);
     
 }
 void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
+    gtk_widget_set_sensitive(gMenuButtons,false);
     gManager.getAllRatings();
     setupProgress();
     

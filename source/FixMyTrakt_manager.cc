@@ -4,7 +4,6 @@
 #define HTTPS_TRAKT
 #endif
 
-#include "ITraktTask.cpp"
 #include <string>
 #ifndef JSON_BUILDER
 #include "jsonbuilder.cpp"
@@ -15,6 +14,8 @@
 #include "ClassLogger.cpp"
 #define CLASS_LOGGER
 #endif
+
+#include "CleanRatingsTask.cpp"
 
 class FixMyTrakt_manager{
     DBManager gDB;
@@ -77,12 +78,19 @@ class FixMyTrakt_manager{
             return gCurrentTask->getTaskName();
         }
 
+        void stopProcess(){
+            if(gCurrentTask!=0){
+                gCurrentTask->gStopProcessing = true;
+            }
+        }
+
         bool pollTask(bool &pRunning, long long &pProgressDone, long long &pTotalItems){
             if(gCurrentTask==0){
                 pRunning = 0;
                 pProgressDone = 1;
                 pTotalItems = 1;
-                return true;
+                gLogger.log("FIRST RETURN TRUE");
+                return false;
             }
             pProgressDone = gCurrentTask->getTasksDone();
             pTotalItems = gCurrentTask->getTotalTasks();
@@ -91,11 +99,15 @@ class FixMyTrakt_manager{
                 pProgressDone = gCurrentTask->getTasksDone();
                 pTotalItems = gCurrentTask->getTotalTasks();
                 pRunning = gCurrentTask->isRunning();                
-                return !pRunning;
+            }else{
+                pRunning = false;
+               
             }
-
-            pRunning = false;
-            return true;
+            if(!pRunning){
+                delete gCurrentTask;
+                gCurrentTask = 0;
+            }
+            return pRunning;
         }
 
         std::string setupAuthenticationPage(){

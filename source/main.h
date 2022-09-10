@@ -19,6 +19,7 @@ GtkWidget *gHouseKeepButton;
 GtkWidget *gBackButton;
 GtkWidget *gHouseKeepRatings;
 GtkWidget *gProgress = 0;
+GtkWidget *gStopProcess = 0;
 Logger gLogger = Logger("MAIN");
 
 void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data);
