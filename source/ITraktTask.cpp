@@ -97,8 +97,11 @@ class CleanRatingsTask : public ITraktTask {
     public:
         bool run(){
             initialise();
-            getResults();
-            deleteResults();
+            if(gCurrentRating % 2==1){
+                getResults();
+            }else{
+                deleteResults();
+            }
             updateStage();
             return true;
         };
@@ -125,7 +128,7 @@ class CleanRatingsTask : public ITraktTask {
         void getResults(){
             std::stringstream lSS;
             lSS << "https://api.trakt.tv/sync/ratings/";
-            lSS << getStageName() << "/" << gCurrentRating << "?page=1&limit=10";
+            lSS << getStageName() << "/" << ((gCurrentRating + 1)/ 2) << "?page=1&limit=10";
 
             long lStatusCode = 0;
             std::string lPage = gPageManager.getPage(lSS.str().c_str(), &lStatusCode);
@@ -136,12 +139,12 @@ class CleanRatingsTask : public ITraktTask {
         }
 
         void deleteResults(){
-
+            gLog.log("delete result", gCurrentRating / 2);
         }
 
         void updateStage(){
             gCurrentRating++;
-            if(gCurrentRating>10){
+            if(gCurrentRating>20){
                 gCurrentRating = 1;
                 gCurrentStage++;
             }
@@ -156,17 +159,16 @@ class CleanRatingsTask : public ITraktTask {
         };
 
         long long getTasksDone(){
-            return ((gCurrentStage + 1) * 10) + (gCurrentRating + 1);
+            return ((gCurrentStage + 1) * 20) + (gCurrentRating + 1);
         };
 
         long long getTotalTasks(){
-            return (STAGE_ALL * 10) + 10;
+            return ((STAGE_ALL + 1) * 20) + 20;
         };
 
         CleanRatingsTask(const char *pClientID, const char *pApiVersion, const char *pAccessToken){
             gPageManager.setDefaultHeaderDetails(pClientID, pApiVersion, pAccessToken);
-           // std::thread lThread( [this] { this->run(); }); // <-- crashes as well
-         //   std::thread lThread(&CleanRatingsTask::run, this); <-- compiles but crashes
+
         };
 
         ~CleanRatingsTask(){
@@ -192,11 +194,3 @@ class CleanRatingsTask : public ITraktTask {
         };
         JsonBuilder *gJson = 0;
 };
-/*            /*FixMyTrakt_httpstraktmanager lPageManager;
-            long lStatusCode = 0;
-            setupPageManager(&lPageManager);
-            std::string lPage = lPageManager.getPage("https://api.trakt.tv/sync/ratings", &lStatusCode);
-            //std::string lPage = lPageManager.getPage("https://www.google.com", &lStatusCode);
-            //std::string lPage = lPageManager.postPage("https://apitrakt.tv/sync/ratings", "", &lStatusCode);
-            gLogger.log("PAGE", lPage);
-            gLogger.log("STATUS CODE", lStatusCode);*/

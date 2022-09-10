@@ -6,7 +6,7 @@ gboolean pollProgress(gpointer user_data){
     long long lCurrentTasks = 0;
     std::string lTaskName = gManager.getTaskName();
     bool lContinue = !gManager.pollTask(lIsRunning, lCurrentTasks, lTotalTasks);
-    double lPercent = lCurrentTasks / lTotalTasks;
+    double lPercent = (double)lCurrentTasks / (double)lTotalTasks;
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(gProgress), lPercent);
     std::stringstream lSS;
     lSS << lTaskName << " " << lPercent;
@@ -23,7 +23,7 @@ void setupProgress(){
     gtk_container_add(GTK_CONTAINER(gWindowPane), gProgress);
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(gProgress), true);
     gtk_widget_show_all(gMainWindow); 
-    g_timeout_add(600, pollProgress, 0);
+    g_timeout_add(100, pollProgress, 0);
     
 }
 void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
@@ -136,7 +136,6 @@ void setupMainWindow(){
 
     gtk_window_set_title(GTK_WINDOW(gMainWindow), "Fix My Trakt");
     g_signal_connect(G_OBJECT (gMainWindow), "destroy", G_CALLBACK(destroy), NULL);
-    //gtk_window_set_position(GTK_WINDOW(gMainWindow), GTK_WIN_POS_CENTER_ALWAYS);
     gtk_window_resize(GTK_WINDOW(gMainWindow), lWorkArea.width, lWorkArea.height);
 
     GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
