@@ -15,6 +15,11 @@
 #define CLASS_LOGGER
 #endif
 
+#ifndef ITRAKTTASK
+    #include "ITraktTask.cpp"
+    #define ITRAKTTASK
+#endif
+
 #include "CleanRatingsTask.cpp"
 
 class FixMyTrakt_manager{
@@ -34,6 +39,13 @@ class FixMyTrakt_manager{
                 delete gCurrentTask;
             }
         };
+
+        ITraktTask::StatisticItem *getFirstStat(){
+            if(gCurrentTask!=0){
+                return gCurrentTask->getFirstStat();
+            }
+            return 0;
+        }
 
         void getToken(){
             JsonBuilder lBuilder;

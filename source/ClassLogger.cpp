@@ -26,15 +26,7 @@ class Logger {
         }
 
         void log(std::string pWhatToLog){
-            std::ofstream ofs(db_file.c_str(), std::ios_base::out | std::ios_base::app);
-            time_t now = time(0);
-            struct tm tstruct;
-            char buf[80];
-            tstruct = *localtime(&now);
-            strftime(buf, sizeof(buf), "%X: ", &tstruct);
-            ofs << buf << pWhatToLog << '\n';
-            std::cout << buf << pWhatToLog << std::endl;
-            ofs.close();
+            log(pWhatToLog.c_str());
         }
 
         void log(const char *pWhatToLog, int pNumberToLog){

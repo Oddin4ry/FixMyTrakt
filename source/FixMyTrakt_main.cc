@@ -5,6 +5,185 @@ void stopProcess(GtkButton *pButton, gpointer pUser_data){
     gtk_widget_set_sensitive(gStopProcess, false);
 }
 
+ControlStat *newControlStat(ITraktTask::StatisticItem *pItem){
+    ControlStat *lStat = new ControlStat;
+    lStat->amount = pItem->amount;
+    lStat->item = pItem;
+    std::stringstream lSS;
+    GtkWidget *lLabel = 0;
+    if(pItem->parentStatistic!=0){
+        lSS << " \\" << pItem->name;
+        lLabel = gtk_label_new(lSS.str().c_str());
+        lSS.str("");
+        lSS << "<span foreground='lavenderblush'> -" << pItem->name << "</span>";
+        gtk_label_set_markup(GTK_LABEL(lLabel), lSS.str().c_str());        
+    }else{
+        lLabel = gtk_label_new(pItem->name.c_str());
+        lSS << "<span foreground='lightpink'>" << pItem->name << "</span>";
+        gtk_label_set_markup(GTK_LABEL(lLabel), lSS.str().c_str());        
+    }
+    gtk_label_set_xalign(GTK_LABEL(lLabel), 0);
+    gtk_grid_attach(GTK_GRID(gStatGrid), lLabel, 0, gCurrentRow, 2, 1);
+    gtk_widget_show(lLabel);
+    lStat->label = lLabel;
+
+    lSS.str("");
+    lSS << pItem->amount;
+    lLabel = gtk_label_new(lSS.str().c_str());
+    lSS.str("");
+    lSS << "<span foreground='lightpink'>" << pItem->amount << "</span>";
+    gtk_label_set_markup(GTK_LABEL(lLabel), lSS.str().c_str());
+    gtk_label_set_xalign(GTK_LABEL(lLabel), 1);
+    gtk_grid_attach(GTK_GRID(gStatGrid), lLabel, 2, gCurrentRow, 1, 1);
+
+    lStat->amountLabel = lLabel;
+    lStat->next = 0;
+    lStat->previous = 0;
+    gCurrentRow++;
+    gtk_widget_show(lLabel);
+    gtk_widget_show(gStatGrid);
+    if(gAllControlStats==0){
+        gAllControlStats = lStat;
+    }
+    if(gLastControlStat!=0){
+        gLastControlStat->next = lStat;
+        lStat->previous = gLastControlStat;
+    }
+    gLastControlStat = lStat;
+    return lStat;
+}
+
+void destroyStats(){
+    ControlStat *lStat = gAllControlStats;
+    if(lStat!=0){
+
+        ControlStat *bNext = lStat->next;
+        if(lStat->label!=0){
+            gtk_widget_destroy(lStat->label);
+        }
+        if(lStat->amountLabel!=0){
+            gtk_widget_destroy(lStat->amountLabel);
+        }
+        delete lStat;
+        lStat = bNext;
+    }
+}
+
+void updateControlStat(ControlStat *pControlStat){
+    std::stringstream lSS;
+    lSS << "<span foreground='lightpink'>" << pControlStat->item->amount << "</span>";
+    gtk_label_set_markup(GTK_LABEL(pControlStat->amountLabel), lSS.str().c_str());
+}
+
+void deleteControlStatsFrom(ControlStat *pControlStat){
+    gLogger.log("BEGIN");
+    ControlStat *lStat = pControlStat->next;
+    if(lStat==0){
+        return;
+    }
+    gLogger.log("BEGIN");
+    gLastControlStat = lStat->previous;
+    gLogger.log("BEGIN");
+    if(lStat->previous!=0){
+    gLogger.log("a");
+    gLogger.log("b");
+        lStat->previous->next = 0;
+    }
+    gLogger.log("c");
+    if(gAllControlStats==lStat){
+    gLogger.log("d");
+        gAllControlStats = 0;
+    gLogger.log("e");
+    }
+    gLogger.log("f");
+    while(lStat!=0){
+    gLogger.log("g");
+        ControlStat *bNext = lStat->next;
+    gLogger.log("h");
+        gtk_widget_destroy(lStat->label);
+    gLogger.log("i");
+        gtk_widget_destroy(lStat->amountLabel);
+    gLogger.log("j");
+        gCurrentRow--;        
+    gLogger.log("k");
+        delete lStat;
+    gLogger.log("l");
+        lStat = bNext;
+    gLogger.log("m");
+
+    }
+    gLogger.log("END");
+    pControlStat = 0;
+    /*pControlStat = pControlStat->next;
+    if(pControlStat==0){
+        return;
+    }
+    gLastControlStat = pControlStat->previous;
+    if(gLastControlStat!=0){
+        gLastControlStat->next = 0;
+    }
+    if(gAllControlStats==pControlStat){
+        gAllControlStats = 0;
+    }
+    while(pControlStat!=0){
+        ControlStat *bNext = pControlStat->next;
+        if(pControlStat->previous!=0){
+            pControlStat->previous->next = 0;
+        }
+        gtk_widget_destroy(pControlStat->label);
+        gtk_widget_destroy(pControlStat->amountLabel);
+        gCurrentRow--;
+        //delete pControlStat;
+        pControlStat = bNext;
+    }*/
+
+}
+
+void updateChildStats(ITraktTask::StatisticItem *pParent, ControlStat *pCurrentControlStat){
+
+    ITraktTask::StatisticItem *lChild = pParent->allChildStatistics;
+    while(lChild!=0){
+        if(pCurrentControlStat==0){
+            pCurrentControlStat = newControlStat(lChild);
+        }else if(pCurrentControlStat->item==lChild){
+            updateControlStat(pCurrentControlStat);
+        }else{
+            deleteControlStatsFrom(pCurrentControlStat);
+            pCurrentControlStat = newControlStat(lChild);
+            
+        }
+        if(pCurrentControlStat!=0){
+            pCurrentControlStat = pCurrentControlStat->next;
+        }
+        lChild = lChild->next;
+    }
+}
+
+void updateStats(){
+    if(gManager.getFirstStat()==0){
+        return;
+    }
+    ITraktTask::StatisticItem *lItem = gManager.getFirstStat();
+    ControlStat *lControlStat = gAllControlStats;
+    while(lItem!=0){
+        if(lControlStat==0){
+            lControlStat = newControlStat(lItem);
+        }else if(lControlStat->item==lItem){
+            updateControlStat(lControlStat);
+        }else{
+            deleteControlStatsFrom(lControlStat);
+            lControlStat = newControlStat(lItem);
+        }
+        if(lItem->allChildStatistics!=0){
+            updateChildStats(lItem, lControlStat);
+        }
+        if(lControlStat!=0){
+            lControlStat = lControlStat->next;
+        }
+        lItem = lItem->next;
+    }
+}
+
 gboolean pollProgress(gpointer user_data){
     bool lIsRunning = false;
     long long lTotalTasks = 0;
@@ -17,22 +196,45 @@ gboolean pollProgress(gpointer user_data){
     std::stringstream lSS;
     lSS << lTaskName << " " << lPercent;
     gtk_progress_bar_set_text(GTK_PROGRESS_BAR(gProgress), lSS.str().c_str());
-    
+
+    updateStats();
+
     if(lContinue){
         return G_SOURCE_CONTINUE;
     }
-    gtk_widget_destroy(gProgress);
     gtk_widget_destroy(gStopProcess);
+    //gtk_widget_destroy(gWindowGrid);
     gtk_widget_set_sensitive(gMenuButtons, true);
     return G_SOURCE_REMOVE;
 }
 
 void setupProgress(){
+    gWindowGrid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(gWindowGrid), 10);
+    gtk_grid_set_row_spacing(GTK_GRID(gWindowGrid), 10);
+    gtk_container_add(GTK_CONTAINER(gWindowPane), gWindowGrid);
+    gtk_widget_show(gWindowGrid);
+
     gProgress = gtk_progress_bar_new();
-    gtk_container_add(GTK_CONTAINER(gWindowPane), gProgress);
+    gtk_grid_attach(GTK_GRID(gWindowGrid), gProgress, 0, 0, 2, 1);
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(gProgress), true);
     gStopProcess = gtk_button_new_with_label("Stop");
-    gtk_container_add(GTK_CONTAINER(gWindowPane), gStopProcess);
+    gtk_grid_attach(GTK_GRID(gWindowGrid), gStopProcess, 2, 0, 1, 1);
+
+    gStatGrid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(gStatGrid), 5);
+    gtk_grid_attach(GTK_GRID(gWindowGrid), gStatGrid, 1, 1, 3, 1);
+
+    GtkWidget *lLabel = gtk_label_new("STATISTIC NAME");
+    gtk_grid_attach(GTK_GRID(gStatGrid), lLabel, 0, 1, 2, 1);
+    gtk_label_set_markup(GTK_LABEL(lLabel), "<span background='indigo' foreground='hotpink'><b>Statistic</b></span>");
+
+    lLabel = gtk_label_new("AMOUNT");
+    gtk_grid_attach(GTK_GRID(gStatGrid), lLabel, 2, 1, 1, 1);
+    gtk_label_set_markup(GTK_LABEL(lLabel), "<span background='indigo' foreground='hotpink'><b>Amount</b></span>");
+    gtk_label_set_xalign(GTK_LABEL(lLabel), 1);
+    gtk_widget_show(gStatGrid);
+
     g_signal_connect(G_OBJECT (gStopProcess), "clicked", G_CALLBACK(stopProcess), NULL);      
     gtk_widget_show_all(gMainWindow); 
     g_timeout_add(100, pollProgress, 0);
@@ -82,6 +284,7 @@ void showHouseKeepMenu(GtkButton *pButton, gpointer pUser_data){
 
 static void destroy(GtkWidget *pWidget, gpointer pData){
     if (pWidget==gMainWindow){
+        destroyStats();
         gtk_main_quit();
     }
 }

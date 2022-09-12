@@ -43,12 +43,20 @@ class CleanRatingsTask : public ITraktTask {
             std::string lPage = gPageManager.getPage(lSS.str().c_str(), &lStatusCode);
             gJson = new JsonBuilder;
             gJson->parseString(lPage.c_str());
-            gLog.log(gJson->getFormatted());
+
+            lSS.str("");
+            lSS << "Rating " << ((gCurrentRating + 1) / 2);
+            addStatistic(addStatistic(getStageName(), 0), lSS.str().c_str(), gJson->getSize());
+            //gLog.log(gJson->getFormatted());
 
         }
 
         void deleteResults(){
+            if(gJson->isEmpty()){
+                return;
+            }
             gLog.log("delete result", gCurrentRating / 2);
+            gLog.log("Get size", gJson->getSize());
         }
 
         void updateStage(){

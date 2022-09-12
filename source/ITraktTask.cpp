@@ -22,7 +22,6 @@ class ITraktTask{
         virtual long long getTotalTasks() = 0;
         virtual std::string getTaskName() = 0;
 
-
         struct StatisticItem{
             std::string name = "";
             long long unsigned amount = 0;
@@ -33,19 +32,26 @@ class ITraktTask{
             StatisticItem *previous = 0;
         };
 
+        StatisticItem *getFirstStat(){
+            return gAllStatistics;
+        }
+
+
+
         Logger gLog = Logger("Task");
-        StatisticItem *addStatistic(std::string pName){
+        StatisticItem *addStatistic(std::string pName, long long pAmount){
             StatisticItem *lStat = gAllStatistics;
             while(lStat!=0){
                 if(pName==lStat->name){
-                    lStat->amount++;
+                    lStat->amount = lStat->amount + pAmount;
                     return lStat;
                 }
                 lStat = lStat->next;
             }
             lStat = new StatisticItem;
             lStat->name = pName;
-            lStat->amount = 1;
+            lStat->amount = pAmount;
+            lStat->allChildStatistics = 0;
             if(gAllStatistics==0){
                 gAllStatistics = lStat;
             }
@@ -63,15 +69,15 @@ class ITraktTask{
             gStopProcessing = true;
         }
 
-        StatisticItem *addStatistic(StatisticItem *pParent, std::string pName){
+        StatisticItem *addStatistic(StatisticItem *pParent, std::string pName, long long pAmount){
             if(pParent==0){
-                return addStatistic(pName);
+                return addStatistic(pName, pAmount);
             }
+            pParent->amount = pParent->amount + pAmount;
             StatisticItem *lStat = pParent->allChildStatistics;
             while(lStat!=0){
                 if(lStat->name==pName){
-                    lStat->amount++;
-                    pParent->amount++;
+                    lStat->amount = lStat->amount + pAmount;
                     return lStat;
                 }
                 lStat = lStat->next;
@@ -80,6 +86,7 @@ class ITraktTask{
             lStat = new StatisticItem;
             lStat->name = pName;
             lStat->parentStatistic = pParent;
+            lStat->amount = pAmount;
             if(pParent->allChildStatistics==0){
                 pParent->allChildStatistics = lStat;
             }

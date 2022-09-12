@@ -45,6 +45,13 @@ class JsonBuilder {
             }
             return "";
         }
+        bool isEmpty(){
+            return gRoot.empty();
+        }
+
+        int getSize(){
+            return gRoot.size();
+        }
 
         long long getIntegerValue(const char *pName){
             Json::Value lValue = gRoot[pName];
