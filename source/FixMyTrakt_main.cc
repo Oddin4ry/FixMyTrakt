@@ -76,71 +76,30 @@ void updateControlStat(ControlStat *pControlStat){
 }
 
 void deleteControlStatsFrom(ControlStat *pControlStat){
-    gLogger.log("BEGIN");
     ControlStat *lStat = pControlStat->next;
     if(lStat==0){
         return;
     }
-    gLogger.log("BEGIN");
     gLastControlStat = lStat->previous;
-    gLogger.log("BEGIN");
     if(lStat->previous!=0){
-    gLogger.log("a");
-    gLogger.log("b");
         lStat->previous->next = 0;
     }
-    gLogger.log("c");
     if(gAllControlStats==lStat){
-    gLogger.log("d");
         gAllControlStats = 0;
-    gLogger.log("e");
     }
-    gLogger.log("f");
     while(lStat!=0){
-    gLogger.log("g");
         ControlStat *bNext = lStat->next;
-    gLogger.log("h");
         gtk_widget_destroy(lStat->label);
-    gLogger.log("i");
         gtk_widget_destroy(lStat->amountLabel);
-    gLogger.log("j");
         gCurrentRow--;        
-    gLogger.log("k");
         delete lStat;
-    gLogger.log("l");
         lStat = bNext;
-    gLogger.log("m");
-
     }
-    gLogger.log("END");
     pControlStat = 0;
-    /*pControlStat = pControlStat->next;
-    if(pControlStat==0){
-        return;
-    }
-    gLastControlStat = pControlStat->previous;
-    if(gLastControlStat!=0){
-        gLastControlStat->next = 0;
-    }
-    if(gAllControlStats==pControlStat){
-        gAllControlStats = 0;
-    }
-    while(pControlStat!=0){
-        ControlStat *bNext = pControlStat->next;
-        if(pControlStat->previous!=0){
-            pControlStat->previous->next = 0;
-        }
-        gtk_widget_destroy(pControlStat->label);
-        gtk_widget_destroy(pControlStat->amountLabel);
-        gCurrentRow--;
-        //delete pControlStat;
-        pControlStat = bNext;
-    }*/
 
 }
 
-void updateChildStats(ITraktTask::StatisticItem *pParent, ControlStat *pCurrentControlStat){
-
+ControlStat *updateChildStats(ITraktTask::StatisticItem *pParent, ControlStat *pCurrentControlStat){
     ITraktTask::StatisticItem *lChild = pParent->allChildStatistics;
     while(lChild!=0){
         if(pCurrentControlStat==0){
@@ -157,6 +116,8 @@ void updateChildStats(ITraktTask::StatisticItem *pParent, ControlStat *pCurrentC
         }
         lChild = lChild->next;
     }
+    return pCurrentControlStat;
+
 }
 
 void updateStats(){
@@ -174,14 +135,18 @@ void updateStats(){
             deleteControlStatsFrom(lControlStat);
             lControlStat = newControlStat(lItem);
         }
-        if(lItem->allChildStatistics!=0){
-            updateChildStats(lItem, lControlStat);
-        }
         if(lControlStat!=0){
             lControlStat = lControlStat->next;
         }
+        if(lItem->allChildStatistics!=0){
+            lControlStat = updateChildStats(lItem, lControlStat);
+        }
         lItem = lItem->next;
     }
+}
+
+void closeStatsWindow(GtkButton *pButton, gpointer pUser_data){
+    gtk_widget_destroy((GtkWidget*) pUser_data);
 }
 
 gboolean pollProgress(gpointer user_data){
@@ -205,6 +170,11 @@ gboolean pollProgress(gpointer user_data){
     gtk_widget_destroy(gStopProcess);
     //gtk_widget_destroy(gWindowGrid);
     gtk_widget_set_sensitive(gMenuButtons, true);
+    
+    GtkWidget *lCloseButton = gtk_button_new_with_label("Close");
+    gtk_grid_attach(GTK_GRID(gStatGrid),lCloseButton, 0, gCurrentRow++, 3, gCurrentRow);
+    g_signal_connect(G_OBJECT (lCloseButton), "clicked", G_CALLBACK(closeStatsWindow), gStatGrid);
+    gtk_widget_show(gWindowGrid);
     return G_SOURCE_REMOVE;
 }
 
@@ -234,7 +204,7 @@ void setupProgress(){
     gtk_label_set_markup(GTK_LABEL(lLabel), "<span background='indigo' foreground='hotpink'><b>Amount</b></span>");
     gtk_label_set_xalign(GTK_LABEL(lLabel), 1);
     gtk_widget_show(gStatGrid);
-
+    gCurrentRow = 2;
     g_signal_connect(G_OBJECT (gStopProcess), "clicked", G_CALLBACK(stopProcess), NULL);      
     gtk_widget_show_all(gMainWindow); 
     g_timeout_add(100, pollProgress, 0);

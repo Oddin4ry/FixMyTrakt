@@ -41,6 +41,11 @@ class Logger {
             log(lSS.str());
         }
 
+        void log(const char *pWhatToLog, long long unsigned pNumberToLog){
+            std::stringstream lSS;
+            lSS << pWhatToLog << ": " << pNumberToLog;
+            log(lSS.str());
+        }
 
         void log(const char *pWhatToLog, bool pBoleanToLog){
             std::stringstream lSS;
@@ -66,6 +71,12 @@ class Logger {
         }
 
         void log(const char *pWhatToLog, std::string pValue){
+            std::stringstream lSS;
+            lSS << pWhatToLog << ": " << pValue;
+            log(lSS.str());
+        }
+
+        void log(std::string pWhatToLog, std::string pValue){
             std::stringstream lSS;
             lSS << pWhatToLog << ": " << pValue;
             log(lSS.str());

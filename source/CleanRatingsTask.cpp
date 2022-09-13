@@ -46,9 +46,11 @@ class CleanRatingsTask : public ITraktTask {
 
             lSS.str("");
             lSS << "Rating " << ((gCurrentRating + 1) / 2);
-            addStatistic(addStatistic(getStageName(), 0), lSS.str().c_str(), gJson->getSize());
-            //gLog.log(gJson->getFormatted());
-
+            if(gJson->getSize()==0){
+                addStatistic(getStageName(), 0);
+            }else{
+                addStatistic(addStatistic(getStageName(), 0), lSS.str().c_str(), gJson->getSize());
+            }
         }
 
         void deleteResults(){
