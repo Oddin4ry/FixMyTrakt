@@ -31,7 +31,16 @@ ControlStat *newControlStat(ITraktTask::StatisticItem *pItem){
     lSS << pItem->amount;
     lLabel = gtk_label_new(lSS.str().c_str());
     lSS.str("");
-    lSS << "<span foreground='lightpink'>" << pItem->amount << "</span>";
+    
+    if(pItem->parentStatistic!=0){
+        lSS << " \\" << pItem->name;
+        lLabel = gtk_label_new(lSS.str().c_str());
+        lSS.str("");
+        lSS << "<span foreground='lavenderblush'> -" << pItem->amount << "</span>";
+    }else{
+        lLabel = gtk_label_new(pItem->name.c_str());
+        lSS << "<span foreground='lightpink'>" << pItem->amount << "</span>";
+    }
     gtk_label_set_markup(GTK_LABEL(lLabel), lSS.str().c_str());
     gtk_label_set_xalign(GTK_LABEL(lLabel), 1);
     gtk_grid_attach(GTK_GRID(gStatGrid), lLabel, 2, gCurrentRow, 1, 1);
@@ -58,20 +67,19 @@ void destroyStats(){
     if(lStat!=0){
 
         ControlStat *bNext = lStat->next;
-        if(lStat->label!=0){
-            gtk_widget_destroy(lStat->label);
-        }
-        if(lStat->amountLabel!=0){
-            gtk_widget_destroy(lStat->amountLabel);
-        }
         delete lStat;
         lStat = bNext;
     }
+    gAllControlStats = 0;
 }
 
 void updateControlStat(ControlStat *pControlStat){
     std::stringstream lSS;
-    lSS << "<span foreground='lightpink'>" << pControlStat->item->amount << "</span>";
+    if(pControlStat->item->parentStatistic!=0){
+        lSS << "<span foreground='lavenderblush'> -" << pControlStat->item->amount << "</span>";
+    }else{
+        lSS << "<span foreground='lightpink'>" << pControlStat->item->amount << "</span>";
+    }
     gtk_label_set_markup(GTK_LABEL(pControlStat->amountLabel), lSS.str().c_str());
 }
 
@@ -173,8 +181,9 @@ gboolean pollProgress(gpointer user_data){
     
     GtkWidget *lCloseButton = gtk_button_new_with_label("Close");
     gtk_grid_attach(GTK_GRID(gStatGrid),lCloseButton, 0, gCurrentRow++, 3, gCurrentRow);
-    g_signal_connect(G_OBJECT (lCloseButton), "clicked", G_CALLBACK(closeStatsWindow), gStatGrid);
-    gtk_widget_show(gWindowGrid);
+    g_signal_connect(G_OBJECT (lCloseButton), "clicked", G_CALLBACK(closeStatsWindow), gWindowGrid);
+    gtk_widget_show_all(gStatGrid);
+    destroyStats();
     return G_SOURCE_REMOVE;
 }
 
