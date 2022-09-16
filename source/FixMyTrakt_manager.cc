@@ -74,7 +74,7 @@ class FixMyTrakt_manager{
             pPageManager->gIsJSON = true;
         }
 
-        void getAllRatings(){
+        void clearAllRatings(){
             if(gCurrentTask!=0){
                 return;
             }

@@ -221,7 +221,7 @@ void setupProgress(){
 }
 void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){
     gtk_widget_set_sensitive(gMenuButtons,false);
-    gManager.getAllRatings();
+    gManager.clearAllRatings();
     setupProgress();
     
 }

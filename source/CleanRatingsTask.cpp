@@ -57,8 +57,10 @@ class CleanRatingsTask : public ITraktTask {
             if(gJson->isEmpty()){
                 return;
             }
+            gJson->removeParent();
             gLog.log("delete result", gCurrentRating / 2);
             gLog.log("Get size", gJson->getSize());
+            gLog.log("New JSON", gJson->getFormatted());
         }
 
         void updateStage(){

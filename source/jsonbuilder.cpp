@@ -24,6 +24,12 @@ class JsonBuilder {
             }
         }
 
+        JsonBuilder removeParents(int pHowMany, JsonBuilder *pNewJson){
+            for(int bCount=1;bCount<=pHowMany;bCount++){
+                removeParent();
+            }
+        }
+
         std::string getFormatted(){
             std::stringstream lSS;
             Json::StyledStreamWriter lWriter;
