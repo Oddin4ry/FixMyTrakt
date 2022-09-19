@@ -216,7 +216,7 @@ void setupProgress(){
     gCurrentRow = 2;
     g_signal_connect(G_OBJECT (gStopProcess), "clicked", G_CALLBACK(stopProcess), NULL);      
     gtk_widget_show_all(gMainWindow); 
-    g_timeout_add(100, pollProgress, 0);
+    g_timeout_add(400, pollProgress, 0);
     
 }
 void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data){

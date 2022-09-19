@@ -81,14 +81,29 @@ class FixMyTrakt_httpstraktmanager{
             curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
             curl_easy_setopt(lCurl, CURLOPT_WRITEDATA, &lOtherCopy);
             curl_easy_setopt(lCurl, CURLOPT_WRITEFUNCTION, &FixMyTrakt_httpstraktmanager::WriteCallBack);
-            curl_easy_setopt(lCurl, CURLOPT_HEADER, 0);
+            curl_easy_setopt(lCurl, CURLOPT_HEADER, 1);
             curl_easy_setopt(lCurl, CURLOPT_VERBOSE, 0);
+            struct curl_slist *hs=NULL;
             if(gIsJSON){
-                struct curl_slist *hs=NULL;
                 hs = curl_slist_append(hs, "Content-Type: application/json");
                 hs = curl_slist_append(hs, "Accept: application/json");
-                curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
             }
+            if(gAccessTokken!=""){
+                std::stringstream bSS;
+                bSS << "authorization: bearer " << gAccessTokken;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gClientId!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-key: " << gClientId;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gApiVersion!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-version " << gApiVersion;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }             
+            curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
             curl_easy_setopt(lCurl, CURLOPT_POST, 1);
             curl_easy_setopt(lCurl, CURLOPT_POSTFIELDS, pPostBody);
             
@@ -97,9 +112,15 @@ class FixMyTrakt_httpstraktmanager{
             curl_easy_getinfo(lCurl, CURLINFO_RESPONSE_CODE, pStatusCode);
 
             curl_easy_cleanup(lCurl);
-            gLogger.log("POST PAGE");
-            gLogger.log(pURL);
-            gLogger.log(lOtherCopy.gInBuffer);
+            gLogger.log("POST PAGE", pURL);
+            gLogger.log("SEND BODY", pPostBody);
+            if(*pStatusCode!=200){
+                gLogger.log("ERROR", pStatusCode);
+                gLogger.log(lOtherCopy.gInBuffer);
+            }else{
+                gLogger.log("STATUS", pStatusCode);
+                gLogger.log("PAGE RESPONSE", lOtherCopy.gInBuffer);
+            }
             return lOtherCopy.gInBuffer;
         }
 

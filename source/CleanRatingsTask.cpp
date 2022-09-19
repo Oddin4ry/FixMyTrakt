@@ -33,41 +33,69 @@ class CleanRatingsTask : public ITraktTask {
             }
             return "ERROR";
         }
+        std::string getStageNameSingular(){
+            if(gCurrentStage==STAGE_ALL){
+                return "all";
+            }else if(gCurrentStage==STAGE_EPISODES){
+                return "episode";
+            }else if(gCurrentStage==STAGE_SEASONS){
+                return "season";
+            }else if(gCurrentStage==STAGE_SHOWS){
+                return "show";
+            }else if(gCurrentStage==STAGE_MOVIES){
+                return "movie";
+            }
+            return "ERROR";
+        }
 
         void getResults(){
             std::stringstream lSS;
             lSS << "https://api.trakt.tv/sync/ratings/";
-            lSS << getStageName() << "/" << ((gCurrentRating + 1)/ 2) << "?page=1&limit=10";
+            lSS << getStageName() << "/" << ((gCurrentRating + 1)/ 2) << "?page=1&limit=500";
 
             long lStatusCode = 0;
             std::string lPage = gPageManager.getPage(lSS.str().c_str(), &lStatusCode);
             gJson = new JsonBuilder;
             gJson->parseString(lPage.c_str());
 
-            lSS.str("");
-            lSS << "Rating " << ((gCurrentRating + 1) / 2);
-            if(gJson->getSize()==0){
-                addStatistic(getStageName(), 0);
-            }else{
-                addStatistic(addStatistic(getStageName(), 0), lSS.str().c_str(), gJson->getSize());
-            }
+
         }
 
         void deleteResults(){
             if(gJson->isEmpty()){
                 return;
             }
-            gJson->removeParent();
-            gLog.log("delete result", gCurrentRating / 2);
-            gLog.log("Get size", gJson->getSize());
-            gLog.log("New JSON", gJson->getFormatted());
+            gCurrentRating = gCurrentRating - 2;
+            JsonBuilder *lNew = new JsonBuilder;
+            std::stringstream lSS;
+            lSS << getStageName();
+            std::vector<Json::Value> lChildren = gJson->getAllChilden(getStageNameSingular());
+            lNew->addJsonVector(getStageName().c_str(), lChildren);
+
+            lSS.str("");
+            lSS << "https://api.trakt.tv/sync/ratings/remove";
+
+            long lStatusCode = 0;
+            std::string lPage = gPageManager.postPage(lSS.str().c_str(), lNew->getFormatted().c_str(), &lStatusCode);
+            if(lPage==""||lStatusCode!=200){
+                gLog.log("ERROR:", lStatusCode);
+            }else{
+                lSS.str("");
+                lSS << "Rating " << ((gCurrentRating + 1) / 2);
+                if(gJson->getSize()==0){
+                    addStatistic(getStageName(), 0);
+                }else{
+                    addStatistic(addStatistic(getStageName(), 0), lSS.str().c_str(), gJson->getSize());
+                }            
+            }
+            delete lNew;
         }
 
         void updateStage(){
             gCurrentRating++;
             if(gCurrentRating>20){
-                gCurrentRating = 1;
                 gCurrentStage++;
+                gCurrentRating = 1;
             }
         }
 
