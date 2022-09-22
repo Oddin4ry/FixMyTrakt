@@ -44,4 +44,5 @@ Logger gLogger = Logger("MAIN");
 
 void showReturnHouseKeepMenu(GtkButton *pButton, gpointer pUser_data);
 void showHouseKeepMenu(GtkButton *pButton, gpointer pUser_data);
+void setupWaitImage();
 //void showHousekeepRatings(GtkButton *pButton, gpointer pUser_data);

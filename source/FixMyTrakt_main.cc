@@ -155,6 +155,9 @@ void updateStats(){
 
 void closeStatsWindow(GtkButton *pButton, gpointer pUser_data){
     gtk_widget_destroy((GtkWidget*) pUser_data);
+    //gtk_widget_destroy((GtkWidget*) gWindowGrid);
+    gWindowGrid = 0;
+    setupWaitImage();
 }
 
 gboolean pollProgress(gpointer user_data){
@@ -176,7 +179,6 @@ gboolean pollProgress(gpointer user_data){
         return G_SOURCE_CONTINUE;
     }
     gtk_widget_destroy(gStopProcess);
-    //gtk_widget_destroy(gWindowGrid);
     gtk_widget_set_sensitive(gMenuButtons, true);
     
     GtkWidget *lCloseButton = gtk_button_new_with_label("Close");
@@ -188,6 +190,10 @@ gboolean pollProgress(gpointer user_data){
 }
 
 void setupProgress(){
+    if(gWindowGrid!=0){
+        gtk_widget_destroy(gWindowGrid);
+        gWindowGrid = 0;
+    }
     gWindowGrid = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(gWindowGrid), 10);
     gtk_grid_set_row_spacing(GTK_GRID(gWindowGrid), 10);
@@ -234,11 +240,16 @@ void clearHouseKeepMenu(){
     gtk_widget_destroy(gHouseKeepRatings);
 }
 
+void showMainMenuContent(){
+    setupWaitImage();
+}
+
 void showMainMenu(){
     gHouseKeepButton = gtk_button_new_with_label("House Keeping");
     g_signal_connect(G_OBJECT (gHouseKeepButton), "clicked", G_CALLBACK(showHouseKeepMenu), NULL);
     gtk_box_pack_start(GTK_BOX(gMenuButtons), gHouseKeepButton, 0, 0, 0);
     gtk_widget_show_all(gMainWindow);
+    showMainMenuContent();
 }
 
 
@@ -319,13 +330,24 @@ void initialise(){
     }
 }
 
+void setupWaitImage(){
+    if(gWindowGrid==0){
+        gWindowGrid = gtk_grid_new();
+        gtk_grid_set_column_spacing(GTK_GRID(gWindowGrid), 10);
+        gtk_grid_set_row_spacing(GTK_GRID(gWindowGrid), 10);
+        gtk_container_add(GTK_CONTAINER(gWindowPane), gWindowGrid);
+        gtk_widget_show(gWindowGrid);
 
-
+        GtkWidget *lImage = gtk_image_new_from_file("/home/james/FixMyTrakt/DB/73192f1122.jpg");
+        gtk_grid_attach(GTK_GRID(gWindowGrid), lImage, 0, 0, 1, 1);
+    }
+}
 
 void setupMainWindow(){
     GdkRectangle lWorkArea = {0};
     gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &lWorkArea);
     gMainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
     gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), "/home/james/source/fixmytrakt/FixMyTrakt/icons/");
     g_set_application_name("Fix My Trakt");
 
@@ -339,6 +361,8 @@ void setupMainWindow(){
     gWindowPane = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_box_pack_start(GTK_BOX(vBox), gWindowPane,false,true,10);
     gtk_container_add(GTK_CONTAINER(gMainWindow), vBox);
+
+    setupWaitImage();
 
     gtk_widget_show_all(gMainWindow);
 
