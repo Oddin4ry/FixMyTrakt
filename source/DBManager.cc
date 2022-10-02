@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 class DBManager{
     public:
         const char *DB_TOKENS = "TOKENS";
+        const char *DB_PICTURES = "PICTURES";
         std::string db_path = "";
         DBManager(){
             db_path = fs::path(getenv("HOME"));
@@ -63,11 +64,14 @@ class DBManager{
         void setStringValue(const char *pFieldName, const char *pValue){
             gBuilder->newValue(pFieldName, pValue);
         }
+        void setBinaryValue(const char *pFieldName, unsigned char *pBinary, long pLength){
+            gBuilder->newBinaryValue(pFieldName, pBinary, pLength);
+        }
 
         ~DBManager(){
             delete gBuilder;
         }
-
+       
         void endUpdate(){
             std::ofstream lFile(gFileName);
             lFile << gBuilder->getFormatted();

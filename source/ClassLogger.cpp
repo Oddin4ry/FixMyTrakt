@@ -40,7 +40,11 @@ class Logger {
             lSS << pWhatToLog << ": " << pNumberToLog;
             log(lSS.str());
         }
-
+        void log(const char *pWhatToLog, size_t pNumberToLog){
+            std::stringstream lSS;
+            lSS << pWhatToLog << ": " << pNumberToLog;
+            log(lSS.str());
+        }
         void log(const char *pWhatToLog, long long unsigned pNumberToLog){
             std::stringstream lSS;
             lSS << pWhatToLog << ": " << pNumberToLog;

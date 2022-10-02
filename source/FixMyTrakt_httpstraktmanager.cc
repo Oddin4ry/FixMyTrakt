@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <curl/curl.h>
 #include <algorithm>
 #ifndef CLASS_LOGGER
@@ -19,6 +20,28 @@ class FixMyTrakt_httpstraktmanager{
             return static_cast<FixMyTrakt_httpstraktmanager*>(pUserP)->HandleDataIn(pContents, pSize, pNMemb);
         }
 
+        static size_t WriteBinaryCallBack(char unsigned *pContents, size_t pSize, size_t pNMemb, void *pUserP){
+            return static_cast<FixMyTrakt_httpstraktmanager*>(pUserP)->HandleBinaryDataIn(pContents, pSize, pNMemb);
+        }
+
+        size_t HandleBinaryDataIn(char unsigned *pData, size_t pSize, size_t pNMemb){
+            if(gBinarySize>0){
+                unsigned char *lExistingData = (unsigned char *) malloc(gBinarySize + 1 + 1000);
+                memcpy(lExistingData, gBinaryBuffer, gBinarySize);
+                free(gBinaryBuffer);
+                gBinaryBuffer = (unsigned char *) malloc(gBinarySize + (pSize * pNMemb) + 1000);
+                memcpy(gBinaryBuffer, lExistingData, gBinarySize);
+                memcpy(gBinaryBuffer + gBinarySize, pData, (pSize * pNMemb));
+                gBinarySize = gBinarySize + (pSize * pNMemb);
+                free(lExistingData);
+                return pSize * pNMemb;
+            }
+            gBinaryBuffer = (unsigned char*) malloc(pSize * pNMemb + 1 + 1000);
+            memcpy(gBinaryBuffer, &pData, pSize * pNMemb);
+            gBinarySize = (pSize * pNMemb);
+            return pSize * pNMemb;
+        }
+
         size_t HandleDataIn(char *pData, size_t pSize, size_t pNMemb){
             gInBuffer.append(pData);
             return pSize * pNMemb;
@@ -30,9 +53,51 @@ class FixMyTrakt_httpstraktmanager{
             return getTag("location: ", "\r", lPage.c_str());
         }
 
+        bool gBinary = false;
+
+        char unsigned *getPicture(const char *pURL, long *pStatusCode, long *pLength){
+            CURL* lCurl;
+            lCurl= curl_easy_init();
+            FixMyTrakt_httpstraktmanager lOtherCopy;
+            lOtherCopy.gBinary = true;
+            curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
+            curl_easy_setopt(lCurl, CURLOPT_WRITEDATA, &lOtherCopy);
+            curl_easy_setopt(lCurl, CURLOPT_WRITEFUNCTION, &FixMyTrakt_httpstraktmanager::WriteBinaryCallBack);
+            curl_easy_setopt(lCurl, CURLOPT_HEADER, 0);
+            curl_easy_setopt(lCurl, CURLOPT_VERBOSE, 0);
+
+            struct curl_slist *hs=NULL;
+            if(gIsJSON){
+                hs = curl_slist_append(hs, "Content-Type: application/json");
+            }
+
+            if(gAccessTokken!=""){
+                std::stringstream bSS;
+                bSS << "authorization: bearer " << gAccessTokken;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gClientId!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-key: " << gClientId;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            }
+            if(gApiVersion!=""){
+                std::stringstream bSS;
+                bSS << "trakt-api-version " << gApiVersion;
+                hs = curl_slist_append(hs, bSS.str().c_str());
+            } 
+            curl_easy_setopt(lCurl, CURLOPT_HTTPHEADER, hs);
+
+            curl_easy_perform(lCurl);
+
+            curl_easy_getinfo(lCurl, CURLINFO_RESPONSE_CODE, pStatusCode);
+
+            curl_easy_cleanup(lCurl);
+            return gBinaryBuffer;
+        }
+
         std::string getPage(const char *pURL, long *pStatusCode){
             CURL* lCurl;
-            std::stringstream lSS;
             lCurl= curl_easy_init();
             FixMyTrakt_httpstraktmanager lOtherCopy;
             curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
@@ -75,7 +140,6 @@ class FixMyTrakt_httpstraktmanager{
 
         std::string postPage(const char *pURL, const char *pPostBody, long *pStatusCode){
             CURL* lCurl;
-            std::stringstream lSS;
             lCurl= curl_easy_init();
             FixMyTrakt_httpstraktmanager lOtherCopy;
             curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
@@ -124,10 +188,8 @@ class FixMyTrakt_httpstraktmanager{
             return lOtherCopy.gInBuffer;
         }
 
-
         std::string getPageWithHeader(const char *pURL){
             CURL* lCurl;
-            std::stringstream lSS;
             lCurl= curl_easy_init();
             FixMyTrakt_httpstraktmanager lOtherCopy;
             curl_easy_setopt(lCurl, CURLOPT_URL, pURL);
@@ -158,6 +220,8 @@ class FixMyTrakt_httpstraktmanager{
     private:
         Logger gLogger = Logger("trakthttps");
         std::string gInBuffer = "";
+        unsigned char *gBinaryBuffer = 0;
+        long gBinarySize = 0;
         std::string getTag(const char *pStartTag, const char *pEndTag, const char *pContents){
             std::string lContents = pContents;
             std::string lStartTag = pStartTag;

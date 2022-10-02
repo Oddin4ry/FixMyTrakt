@@ -155,7 +155,6 @@ void updateStats(){
 
 void closeStatsWindow(GtkButton *pButton, gpointer pUser_data){
     gtk_widget_destroy((GtkWidget*) pUser_data);
-    //gtk_widget_destroy((GtkWidget*) gWindowGrid);
     gWindowGrid = 0;
     setupWaitImage();
 }
@@ -343,6 +342,11 @@ void setupWaitImage(){
     }
 }
 
+void getStatistics(){
+    gManager.getSettings();
+    gManager.getStats();
+}
+
 void setupMainWindow(){
     GdkRectangle lWorkArea = {0};
     gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &lWorkArea);
@@ -366,6 +370,7 @@ void setupMainWindow(){
 
     gtk_widget_show_all(gMainWindow);
 
+    getStatistics();
 }
 
 int main(int argc, char *argv[]){
