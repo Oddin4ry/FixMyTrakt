@@ -130,6 +130,10 @@ class FixMyTrakt_manager{
             gDBManager.setBinaryValue("banner", gBannerBinary, gAvatarBinaryLength);
             gDBManager.setBinaryValue("avator", gAvatarBinary, gAvatarBinaryLength);
             gDBManager.endUpdate();
+
+            std:ofstream lSS("/home/james/FixMyTrakt/DB/test.jpg", ios::out|ios::binary):
+            lSS.write(gBannerBinary, gAvatarBinaryLength);
+            lSS.close();
         }
 
         void getStats(){
